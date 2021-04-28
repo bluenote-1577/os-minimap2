@@ -23,7 +23,6 @@ typedef khash_t(idx) idxhash_t;
 KHASH_MAP_INIT_STR(str, uint32_t)
 
 #define kroundup64(x) (--(x), (x)|=(x)>>1, (x)|=(x)>>2, (x)|=(x)>>4, (x)|=(x)>>8, (x)|=(x)>>16, (x)|=(x)>>32, ++(x))
-
 typedef struct mm_idx_bucket_s {
 	mm128_v a;   // (minimizer, position) array
 	int32_t n;   // size of the _p_ array
@@ -41,13 +40,13 @@ typedef struct mm_idx_intv_s {
 	mm_idx_intv1_t *a;
 } mm_idx_intv_t;
 
-mm_idx_t *mm_idx_init(int w, int k, int b, int flag)
+mm_idx_t *mm_idx_init(int w, int k, int b, int flag, int s, int t, int syncmer)
 {
 	mm_idx_t *mi;
 	if (k*2 < b) b = k * 2;
 	if (w < 1) w = 1;
 	mi = (mm_idx_t*)calloc(1, sizeof(mm_idx_t));
-	mi->w = w, mi->k = k, mi->b = b, mi->flag = flag;
+	mi->w = w, mi->k = k, mi->b = b, mi->flag = flag, mi->s = s, mi-> t = t, mi->syncmer = syncmer;
 	mi->B = (mm_idx_bucket_t*)calloc(1<<b, sizeof(mm_idx_bucket_t));
 	if (!(mm_dbg_flag & 1)) mi->km = km_init();
 	return mi;
@@ -336,7 +335,12 @@ static void *worker_pipeline(void *shared, int step, void *in)
 		for (i = 0; i < s->n_seq; ++i) {
 			mm_bseq1_t *t = &s->seq[i];
 			if (t->l_seq > 0)
-				mm_sketch(0, t->seq, t->l_seq, p->mi->w, p->mi->k, t->rid, p->mi->flag&MM_I_HPC, &s->a);
+                if (p->mi->syncmer == 1){
+                    open_sync_sketch(0, t->seq, t->l_seq, p->mi->k, p->mi->s, p->mi->t, t->rid, p->mi->flag&MM_I_HPC, &s->a);
+                }
+                else{
+                    mm_sketch(0, t->seq, t->l_seq, p->mi->w, p->mi->k, t->rid, p->mi->flag&MM_I_HPC, &s->a);
+                }
 			else if (mm_verbose >= 2)
 				fprintf(stderr, "[WARNING] the length database sequence '%s' is 0\n", t->name);
 			free(t->seq); free(t->name);
@@ -351,7 +355,7 @@ static void *worker_pipeline(void *shared, int step, void *in)
     return 0;
 }
 
-mm_idx_t *mm_idx_gen(mm_bseq_file_t *fp, int w, int k, int b, int flag, int mini_batch_size, int n_threads, uint64_t batch_size)
+mm_idx_t *mm_idx_gen(mm_bseq_file_t *fp, int w, int k, int b, int flag, int mini_batch_size, int n_threads, uint64_t batch_size, int s, int t, int syncmer)
 {
 	pipeline_t pl;
 	if (fp == 0 || mm_bseq_eof(fp)) return 0;
@@ -359,7 +363,7 @@ mm_idx_t *mm_idx_gen(mm_bseq_file_t *fp, int w, int k, int b, int flag, int mini
 	pl.mini_batch_size = (uint64_t)mini_batch_size < batch_size? mini_batch_size : batch_size;
 	pl.batch_size = batch_size;
 	pl.fp = fp;
-	pl.mi = mm_idx_init(w, k, b, flag);
+	pl.mi = mm_idx_init(w, k, b, flag, s, t, syncmer);
 
 	kt_pipeline(n_threads < 3? n_threads : 3, worker_pipeline, &pl, 3);
 	if (mm_verbose >= 3)
@@ -372,18 +376,18 @@ mm_idx_t *mm_idx_gen(mm_bseq_file_t *fp, int w, int k, int b, int flag, int mini
 	return pl.mi;
 }
 
-mm_idx_t *mm_idx_build(const char *fn, int w, int k, int flag, int n_threads) // a simpler interface; deprecated
+mm_idx_t *mm_idx_build(const char *fn, int w, int k, int flag, int n_threads, int s, int t, int syncmer) // a simpler interface; deprecated
 {
 	mm_bseq_file_t *fp;
 	mm_idx_t *mi;
 	fp = mm_bseq_open(fn);
 	if (fp == 0) return 0;
-	mi = mm_idx_gen(fp, w, k, 14, flag, 1<<18, n_threads, UINT64_MAX);
+	mi = mm_idx_gen(fp, w, k, 14, flag, 1<<18, n_threads, UINT64_MAX, s, t, syncmer);
 	mm_bseq_close(fp);
 	return mi;
 }
 
-mm_idx_t *mm_idx_str(int w, int k, int is_hpc, int bucket_bits, int n, const char **seq, const char **name)
+mm_idx_t *mm_idx_str(int w, int k, int is_hpc, int bucket_bits, int n, const char **seq, const char **name, int s, int t, int syncmer)
 {
 	uint64_t sum_len = 0;
 	mm128_v a = {0,0,0};
@@ -397,7 +401,7 @@ mm_idx_t *mm_idx_str(int w, int k, int is_hpc, int bucket_bits, int n, const cha
 	if (is_hpc) flag |= MM_I_HPC;
 	if (name == 0) flag |= MM_I_NO_NAME;
 	if (bucket_bits < 0) bucket_bits = 14;
-	mi = mm_idx_init(w, k, bucket_bits, flag);
+	mi = mm_idx_init(w, k, bucket_bits, flag, s, t, syncmer);
 	mi->n_seq = n;
 	mi->seq = (mm_idx_seq_t*)kcalloc(mi->km, n, sizeof(mm_idx_seq_t)); // ->seq is allocated from km
 	mi->S = (uint32_t*)calloc((sum_len + 7) / 8, 4);
@@ -424,7 +428,12 @@ mm_idx_t *mm_idx_str(int w, int k, int is_hpc, int bucket_bits, int n, const cha
 		sum_len += p->len;
 		if (p->len > 0) {
 			a.n = 0;
-			mm_sketch(0, s, p->len, w, k, i, is_hpc, &a);
+            if (mi->syncmer == 1){
+                open_sync_sketch(0, s, p->len, mi->k, mi->s, mi->t, i, is_hpc, &a);
+            }
+            else{
+                mm_sketch(0, s, p->len, w, k, i, is_hpc, &a);
+            }
 			mm_idx_add(mi, a.n, a.a);
 		}
 	}
@@ -488,7 +497,7 @@ mm_idx_t *mm_idx_load(FILE *fp)
 	if (fread(magic, 1, 4, fp) != 4) return 0;
 	if (strncmp(magic, MM_IDX_MAGIC, 4) != 0) return 0;
 	if (fread(x, 4, 5, fp) != 5) return 0;
-	mi = mm_idx_init(x[0], x[1], x[2], x[4]);
+	mi = mm_idx_init(x[0], x[1], x[2], x[4], 0, 0, 0);
 	mi->n_seq = x[3];
 	mi->seq = (mm_idx_seq_t*)kcalloc(mi->km, mi->n_seq, sizeof(mm_idx_seq_t));
 	for (i = 0; i < mi->n_seq; ++i) {
@@ -591,7 +600,7 @@ mm_idx_t *mm_idx_reader_read(mm_idx_reader_t *r, int n_threads)
 		if (mi && mm_verbose >= 2 && (mi->k != r->opt.k || mi->w != r->opt.w || (mi->flag&MM_I_HPC) != (r->opt.flag&MM_I_HPC)))
 			fprintf(stderr, "[WARNING]\033[1;31m Indexing parameters (-k, -w or -H) overridden by parameters used in the prebuilt index.\033[0m\n");
 	} else
-		mi = mm_idx_gen(r->fp.seq, r->opt.w, r->opt.k, r->opt.bucket_bits, r->opt.flag, r->opt.mini_batch_size, n_threads, r->opt.batch_size);
+		mi = mm_idx_gen(r->fp.seq, r->opt.w, r->opt.k, r->opt.bucket_bits, r->opt.flag, r->opt.mini_batch_size, n_threads, r->opt.batch_size, r->opt.s, r->opt.t, r->opt.syncmer);
 	if (mi) {
 		if (r->fp_out) mm_idx_dump(r->fp_out, mi);
 		mi->index = r->n_parts++;
@@ -654,7 +663,7 @@ mm_idx_intv_t *mm_idx_read_bed(const mm_idx_t *mi, const char *fn, int read_junc
 		char *p, *q, *bl, *bs;
 		int32_t i, id = -1, n_blk = 0;
 		for (p = q = str.s, i = 0;; ++p) {
-			if (*p == 0 || *p == '\t') {
+			if (*p == 0 || isspace(*p)) {
 				int32_t c = *p;
 				*p = 0;
 				if (i == 0) { // chr

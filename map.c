@@ -9,7 +9,6 @@
 #include "mmpriv.h"
 #include "bseq.h"
 #include "khash.h"
-
 struct mm_tbuf_s {
 	void *km;
 	int rep_len, frag_gap;
@@ -67,7 +66,12 @@ static void collect_minimizers(void *km, const mm_mapopt_t *opt, const mm_idx_t 
 	mv->n = 0;
 	for (i = n = 0; i < n_segs; ++i) {
 		size_t j;
-		mm_sketch(km, seqs[i], qlens[i], mi->w, mi->k, i, mi->flag&MM_I_HPC, mv);
+        if (mi->syncmer == 1){
+            open_sync_sketch(km, seqs[i], qlens[i], mi->k, mi->s, mi->t, i, mi->flag&MM_I_HPC, mv);
+        }
+        else{
+            mm_sketch(km, seqs[i], qlens[i], mi->w, mi->k, i, mi->flag&MM_I_HPC, mv);
+        }
 		for (j = n; j < mv->n; ++j)
 			mv->a[j].y += sum << 1;
 		if (opt->sdust_thres > 0) // mask low-complexity minimizers

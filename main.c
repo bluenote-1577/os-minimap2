@@ -7,7 +7,7 @@
 #include "mmpriv.h"
 #include "ketopt.h"
 
-#define MM_VERSION "2.18-r1015"
+#define MM_VERSION "2.17-r974-dirty"
 
 #ifdef __linux__
 #include <sys/resource.h>
@@ -24,6 +24,8 @@ void liftrlimit() {}
 #endif
 
 static ko_longopt_t long_options[] = {
+    { "synct",          ko_required_argument, 401 },
+    { "syncs",          ko_required_argument, 402 },
 	{ "bucket-bits",    ko_required_argument, 300 },
 	{ "mb-size",        ko_required_argument, 'K' },
 	{ "seed",           ko_required_argument, 302 },
@@ -108,7 +110,7 @@ static inline void yes_or_no(mm_mapopt_t *opt, int flag, int long_idx, const cha
 
 int main(int argc, char *argv[])
 {
-	const char *opt_str = "2aSDw:k:K:t:r:f:Vv:g:G:I:d:XT:s:x:Hcp:M:n:z:A:B:O:E:m:N:Qu:R:hF:LC:yYPo:";
+	const char *opt_str = "2aSDw:k:K:t:r:f:Vv:g:G:I:d:XT:s:x:Hcp:M:n:z:A:B:O:E:m:N:Qu:R:hF:LC:yYPo:5:6:7:";
 	ketopt_t o = KETOPT_INIT;
 	mm_mapopt_t opt;
 	mm_idxopt_t ipt;
@@ -219,6 +221,14 @@ int main(int argc, char *argv[])
 		else if (c == 344) alt_list = o.arg; // --alt
 		else if (c == 345) opt.alt_drop = atof(o.arg); // --alt-drop
 		else if (c == 346) opt.mask_len = mm_parse_num(o.arg); // --mask-len
+        else if (c == 401) {
+            ipt.t = atoi(o.arg); 
+            if (ipt.t > 0 && ipt.s > 0) ipt.syncmer = 1;
+        }
+        else if (c == 402) {
+            ipt.s = atoi(o.arg); 
+            if (ipt.t > 0 && ipt.s > 0) ipt.syncmer = 1;
+        }
 		else if (c == 314) { // --frag
 			yes_or_no(&opt, MM_F_FRAG_MODE, o.longidx, o.arg, 1);
 		} else if (c == 315) { // --secondary
@@ -296,6 +306,9 @@ int main(int argc, char *argv[])
 		fprintf(fp_help, "    -w INT       minimizer window size [%d]\n", ipt.w);
 		fprintf(fp_help, "    -I NUM       split index for every ~NUM input bases [4G]\n");
 		fprintf(fp_help, "    -d FILE      dump index to FILE []\n");
+		fprintf(fp_help, "    --syncmer    use syncmers instead of minimizers\n");
+		fprintf(fp_help, "    --syncs INT s value for open syncmer\n");
+		fprintf(fp_help, "    --synct INT t value for open syncmer. Must be less than k - s\n");
 		fprintf(fp_help, "  Mapping:\n");
 		fprintf(fp_help, "    -f FLOAT     filter out top FLOAT fraction of repetitive minimizers [%g]\n", opt.mid_occ_frac);
 		fprintf(fp_help, "    -g NUM       stop chain enlongation if there are no minimizers in INT-bp [%d]\n", opt.max_gap);

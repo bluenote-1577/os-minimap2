@@ -62,7 +62,8 @@ typedef struct {
 } mm_idx_seq_t;
 
 typedef struct {
-	int32_t b, w, k, flag;
+    int syncmer;
+	int32_t b, w, k, flag, s, t;
 	uint32_t n_seq;            // number of reference sequences
 	int32_t index;
 	int32_t n_alt;
@@ -101,7 +102,7 @@ typedef struct {
 
 // indexing and mapping options
 typedef struct {
-	short k, w, flag, bucket_bits;
+	short k, w, flag, bucket_bits, s, t, syncmer;
 	int64_t mini_batch_size;
 	uint64_t batch_size;
 } mm_idxopt_t;
@@ -280,7 +281,7 @@ void mm_idx_dump(FILE *fp, const mm_idx_t *mi);
  *
  * @return minimap2 index
  */
-mm_idx_t *mm_idx_str(int w, int k, int is_hpc, int bucket_bits, int n, const char **seq, const char **name);
+mm_idx_t *mm_idx_str(int w, int k, int is_hpc, int bucket_bits, int n, const char **seq, const char **name, int s, int t, int syncmer);
 
 /**
  * Print index statistics to stderr
@@ -380,7 +381,7 @@ int mm_idx_bed_junc(const mm_idx_t *mi, int32_t ctg, int32_t st, int32_t en, uin
 
 // deprecated APIs for backward compatibility
 void mm_mapopt_init(mm_mapopt_t *opt);
-mm_idx_t *mm_idx_build(const char *fn, int w, int k, int flag, int n_threads);
+mm_idx_t *mm_idx_build(const char *fn, int w, int k, int flag, int n_threads, int s, int t, int syncmer);
 
 #ifdef __cplusplus
 }
