@@ -17,4 +17,11 @@ To use syncmers, specify parameters ``--syncs (s) --synct (t)`` where ``t,s`` co
 
 For detailed instructions on how to use minimap2, see https://github.com/lh3/minimap2. 
 
-Currently homo-polymer compressed runs are not supported. -->
+Currently homo-polymer compressed runs are not supported. 
+
+## Citations
+
+Edgar, Robert. "Syncmers are more sensitive than minimizers for selecting conserved k‑mers in biological sequences." PeerJ 9 (2021): e10805.
+
+Shaw, Jim and Yu, Yun William. "TITLE TODO." In preparation (2021).
+-->
