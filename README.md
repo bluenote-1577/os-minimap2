@@ -17,7 +17,7 @@ To use syncmers, specify parameters ``--syncs (s) --synct (t)`` where ``t,s`` co
 
 For detailed instructions on how to use minimap2, see https://github.com/lh3/minimap2. 
 
-Currently homo-polymer compressed runs are not supported. 
+Currently homo-polymer compressed runs are not supported. Indexing and mapping as separate steps is also not supported.
 
 ## Citations
 
