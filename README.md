@@ -1,6 +1,4 @@
-TODO
-
-<!-- # os-minimap2 : minimap2 with open syncmer capabilities 
+# os-minimap2 : minimap2 with open syncmer capabilities 
 
 This is a forked version of minimap2 which has the capability of using open syncmers (Edgar 2021), see https://peerj.com/articles/10805/), instead of minimizers for selecting k-mers to be used for seeding. 
 
@@ -23,5 +21,5 @@ Currently homo-polymer compressed runs are not supported. Indexing and mapping a
 
 Edgar, Robert. "Syncmers are more sensitive than minimizers for selecting conserved k‑mers in biological sequences." PeerJ 9 (2021): e10805.
 
-Shaw, Jim and Yu, Yun William. "TITLE TODO." In preparation (2021).
--->
+Shaw, Jim and Yu, Yun William. "Theory of local k-mer selection with applications to
+long-read alignment" In preparation (2021).
