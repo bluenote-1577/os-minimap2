@@ -2,7 +2,7 @@
 
 This is a forked version of minimap2 which has the capability of using open syncmers (Edgar 2021, see https://peerj.com/articles/10805/), instead of minimizers for selecting k-mers to be used for seeding. 
 
-It is known that open syncmers perform better than minimizers for k-mer matching tasks under mutation. We show in Shaw and Yu (2021) that open syncmers perform comparably well against other k-mer selection methods in theory and that it improves sensitivity for noisy read alignments. 
+It is known that open syncmers perform better than minimizers for k-mer matching tasks under mutation. We show in Shaw and Yu (2021) that open syncmers perform well against other k-mer selection methods in theory and that it improves sensitivity for noisy read alignments. 
 
 ## Quickstart
 ```
