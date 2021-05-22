@@ -22,4 +22,4 @@ Currently homo-polymer compressed runs are not supported. Indexing and mapping a
 Edgar, Robert. "Syncmers are more sensitive than minimizers for selecting conserved k‑mers in biological sequences." PeerJ 9 (2021): e10805.
 
 Shaw, Jim and Yu, Yun William. "Theory of local k-mer selection with applications to
-long-read alignment" In preparation (2021).
+long-read alignment" bioRxiv (2021), submitted for publication.
