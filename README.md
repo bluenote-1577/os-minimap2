@@ -7,7 +7,7 @@ It is known that open syncmers perform better than minimizers for k-mer matching
 ## Quickstart
 ```
 git clone https://github.com/bluenote-1577/os-minimap2
-cd minimap2 && make
+cd os-minimap2 && make
 ## Using open syncmers with (s,t) = (11,3).
 ./minimap2 -a --syncs 11 --synct 3 test/MT-human.fa test/MT-orang.fa > test.sam 
 ```
