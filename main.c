@@ -226,8 +226,9 @@ int main(int argc, char *argv[])
             if (ipt.t > 0 && ipt.s > 0) ipt.syncmer = 1;
         }
         else if (c == 402) {
+            fprintf(stderr, "SYNCT is %d\n", ipt.t);
             ipt.s = atoi(o.arg); 
-            if (ipt.t > 0 && ipt.s > 0) ipt.syncmer = 1;
+            ipt.syncmer = 1;
         }
 		else if (c == 314) { // --frag
 			yes_or_no(&opt, MM_F_FRAG_MODE, o.longidx, o.arg, 1);

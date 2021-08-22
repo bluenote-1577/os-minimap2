@@ -121,6 +121,14 @@ static inline void insert_syncmer (int len, const char *str, int t, uint32_t rid
  */
 void open_sync_sketch(void *km, const char *str, int len, int k, int s, int t, uint32_t rid, int is_hpc, mm128_v *p)
 {
+
+    int used_t = 0;
+    if (t == 0) {
+        used_t = (k - s)/2 + 1;
+    }
+    else{
+        used_t = t;
+    }
     uint64_t shift1 = 2 * (s - 1), mask = (1ULL<<2*s) - 1, smer[2] = {0,0};
     uint64_t kmer[2] = {0,0}, kmer_mask = (1ULL<<2*k) - 1, shift_kmer = 2*(k-1);
 	int i, j, l, buf_pos, min_pos, smer_span = 0;
@@ -177,7 +185,7 @@ void open_sync_sketch(void *km, const char *str, int len, int k, int s, int t, u
         //buf_pos is the last s-mer added. buf_pos+1 is the first k-mer in the window. 
 		buf[buf_pos] = info; // need to do this here as appropriate buf_pos and buf[buf_pos] are needed below
         //fprintf(stderr,"info %d,%d, s = %d, t = %d, smer = %s \n",info.x,info.y,s,t);
-        int offset = (strand == 0)? t : w - t + 1;
+        int offset = (strand == 0)? used_t : w - used_t + 1;
         //int offset = t;
 		if (info.x <= min.x) { // a new minimum; then write the old min
 			//if (l >= w + s && min.x != UINT64_MAX) kv_push(mm128_t, km, *p, min);
