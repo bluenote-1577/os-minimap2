@@ -20,4 +20,4 @@ Currently homo-polymer compressed runs are not supported. Indexing and mapping a
 ## Citations
 
 Shaw, Jim and Yu, Yun William. "Theory of local k-mer selection with applications to
-long-read alignment" bioRxiv (2021), submitted for publication.
+long-read alignment" Bioinformatics (2022).
