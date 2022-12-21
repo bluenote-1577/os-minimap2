@@ -19,5 +19,7 @@ Currently homo-polymer compressed runs are not supported. Indexing and mapping a
 
 ## Citations
 
+Li, H. (2018). Minimap2: pairwise alignment for nucleotide sequences. Bioinformatics, 34:3094-3100. doi:10.1093/bioinformatics/bty191
+
 Shaw, Jim and Yu, Yun William. "Theory of local k-mer selection with applications to
-long-read alignment" Bioinformatics (2022).
+long-read alignment" Bioinformatics (2022). 
